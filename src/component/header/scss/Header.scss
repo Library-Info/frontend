@@ -1,0 +1,20 @@
+
+@media only screen and (min-width: 340px) {
+  .header-container {
+    background-color: rgba(0, 0, 0, 0.2);
+    width: 90%;
+    height: 6%;
+    padding: 0 5%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    .burger-icon {
+      width: 25px;
+      height: 25px;
+      color: #fff;
+    }
+  }
+
+}

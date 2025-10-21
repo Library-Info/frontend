@@ -1,0 +1,12 @@
+import '../scss/Header.scss'
+import { RxHamburgerMenu } from "react-icons/rx";
+
+function Header() {
+    return (
+        <div className="header-container">
+            <RxHamburgerMenu class="burger-icon" />
+        </div>
+    );
+}
+
+export default Header;

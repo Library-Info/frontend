@@ -1,0 +1,29 @@
+.wrap {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+
+}
+
+@media only screen and (min-width: 340px) {
+  .search-container {
+    width: 80%;
+    height: 50px;
+    margin-top: 35%;
+    box-shadow: 1px 1px 10px #ccc;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .map-api {
+    margin-top: 5vh;
+    width: 80%;
+    height: 32vh;
+  }
+}
+
