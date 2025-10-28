@@ -5,25 +5,109 @@
   flex-direction: column;
   justify-content: start;
   align-items: center;
+  
+  .main-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+  }
 
 }
 
 @media only screen and (min-width: 340px) {
-  .search-container {
-    width: 80%;
-    height: 50px;
-    margin-top: 35%;
-    box-shadow: 1px 1px 10px #ccc;
-    border-radius: 25px;
+  .wrap {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  
+    .main-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+
+      .search-container {
+        width: 80%;
+        height: 50px;
+        margin-top: 35%;
+        box-shadow: 1px 1px 10px #ccc;
+        border-radius: 25px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+
+        .sch-lib-input {
+          border: 0;
+          outline: 0;
+        }
+      }
+      .map-api {
+        margin-top: 5vh;
+        width: 80%;
+        height: 32vh;
+      }
+    }
+
+    .modal-container {
+    background-color: #fff;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    position: absolute;
     display: flex;
-    flex-direction: row;
-    justify-content: space-around;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-  }
-  .map-api {
-    margin-top: 5vh;
-    width: 80%;
-    height: 32vh;
+    
+      .modal-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        height: 90%;
+        padding: 10% 0 0 0;
+
+        .modal-close {
+          width: 90%;
+          padding: 0 5%;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+         
+
+          .modal-close-btn {
+            font-size: 35px;
+          }
+        }
+
+        .search-container {
+        width: 80%;
+        height: 50px;
+        margin-top: 10%;
+        box-shadow: 1px 1px 10px #ccc;
+        border-radius: 25px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+
+        .sch-lib-input {
+          border: 0;
+          outline: 0;
+        }
+      }
+      }
+    }
   }
 }
 

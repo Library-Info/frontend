@@ -1,6 +1,7 @@
 
 @media only screen and (min-width: 340px) {
   .header-container {
+    z-index: 9999;
     background-color: rgba(0, 0, 0, 0.2);
     width: 90%;
     height: 6%;
