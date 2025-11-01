@@ -31,9 +31,9 @@ function Main() {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
                     });
+                    
                     // setError(null);
                     console.log(location);
-                    
                 },
                 (err) => {
                     console.error("위치 가져오기 실패:", err.message);
@@ -45,13 +45,23 @@ function Main() {
                     maximumAge: 0,
                 }
             );
-            getAddr();
-            
         } else {
             // setError("Geolocation이 지원되지 않는 브라우저입니다.");
         }
-        fetchGetLibList();
+        
     }, []);
+
+    useEffect(() => {
+        if (location.lat && location.lng) {
+            getAddr(); // 위치가 설정된 이후에만 주소 변환 실행
+        }
+    }, [location]); // location이 바뀔 때 실행
+
+    useEffect(()=> {
+        fetchGetLibList();
+        console.log('12');
+        
+    },[address]);
 
 
     const getAddr = () => {
@@ -65,10 +75,10 @@ function Main() {
                 if (status === window.kakao.maps.services.Status.OK) {
                 const addressName = result[0]?.address?.address_name || "주소를 찾을 수 없음"; // 주소 가져오기
                 const parts = addressName.split(" "); // 띄어쓰기기준으로 split
-                const city = parts[0]; // ex) 서울(시)
-                const province = parts[1]; // ex) 중구(구)
+                const city = `${parts[0]}`; // ex) 서울(시)
+                const province = `${parts[1]}`; // ex) 중구(구)
                 setAddress({ city: city, province: province }) // address 변수에 시, 구
-                // console.log(address);
+                
                 }
             }
         );
@@ -76,7 +86,7 @@ function Main() {
 
     const fetchGetLibList = async() => {
         try {
-            const res = await fetch(LIBLIST_URL, {
+            const res = await fetch(LIBLIST_URL + `?lantitude=${location.lat}&longitude=${location.lng}&city=${address.city}&province=${address.province}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
