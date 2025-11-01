@@ -33,11 +33,12 @@
       flex-direction: column;
       justify-content: start;
       align-items: center;
+      gap: 6%;
 
       .search-container {
         width: 80%;
         height: 50px;
-        margin-top: 35%;
+        margin-top: 25%;
         box-shadow: 1px 1px 10px #ccc;
         border-radius: 25px;
         display: flex;
@@ -50,10 +51,24 @@
           outline: 0;
         }
       }
+      
+      .lib-list {
+        width: 70%;
+        // height: ;
+        padding: 2%;
+        border: 1px solid #666;
+        border-radius: 10px 0px;
+        box-shadow: 1px 1px 10px #ccc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
       .map-api {
-        margin-top: 5vh;
+        // margin-top: 5vh;
         width: 80%;
-        height: 32vh;
+        height: 35%;
+        border-radius: 5px;
       }
     }
 

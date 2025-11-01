@@ -17,12 +17,12 @@ const LOCATION_URL = 'http://localhost:3000';
 //     backendHost = DEPLOY_BACKEND;
 // }
 
-// const USER = '/api/user';
+const LIBLIST = '/library/list';
 // const UPCYCLE = '/api/upcycle'
 // const MEET = '/api/meeting'
 //
 //
-// export const USER_URL = API_BASE_URL + USER;
+export const LIBLIST_URL = API_BASE_URL + LIBLIST;
 // export const UPCYCLE_URL = API_BASE_URL + UPCYCLE;
 // export const MEET_URL = API_BASE_URL + MEET;
 // export const KAKAO_URL=`https://kauth.kakao.com/oauth/authorize`;

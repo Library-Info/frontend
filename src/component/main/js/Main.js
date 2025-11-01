@@ -4,15 +4,23 @@ import React, {useEffect, useState} from "react";
 import Header from '../../header/js/Header.js'
 import { IoSearchSharp, IoClose  } from "react-icons/io5";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
+import {LIBLIST_URL} from "../../../config/Host-config.js";
 
 
 function Main() {
-    const [libList, setLibList] = useState([]); // 도서관 위치 리스트
+    const [libList, setLibList] = useState([]); // 도서관 리스트
     const [location, setLocation] = useState({ lat: 37.5665, lng: 126.9780 }); // 기본값 서울
-    const [error, setError] = useState();
-    const [modalOpen, setModalOpen] = useState(false);
-    const [bookName, setBookName] = useState([]);
-    const [address, setAddress] = useState([]);
+    const [error, setError] = useState(); // 에러변수
+    const [modalOpen, setModalOpen] = useState(false); // 책 검색 모달
+    const [bookName, setBookName] = useState([]); // 책 이름
+    const [address, setAddress] = useState({ city: "", province: "" }); // 현재위치주소
+    const [bookList, setBookList] = useState([]); // 검색한 책 리스트
+    const [page, setPage] = useState(1); // 현재페이지
+    const itemsPerPage = 15; // 페이지당 15개
+    const displayedBookList = bookList.slice( 
+        (page - 1) * itemsPerPage,
+        page * itemsPerPage
+    );
 
     useEffect(() => {
         // 현재 위치 가져오기
@@ -37,15 +45,16 @@ function Main() {
                     maximumAge: 0,
                 }
             );
-            getAddr(location);
+            getAddr();
+            
         } else {
             // setError("Geolocation이 지원되지 않는 브라우저입니다.");
         }
-
+        fetchGetLibList();
     }, []);
 
 
-    function getAddr(location){
+    const getAddr = () => {
         // 주소-좌표 변환 객체를 생성합니다
         let geocoder = new kakao.maps.services.Geocoder();
 
@@ -54,18 +63,39 @@ function Main() {
             location.lat, // 위도
             (result, status) => {
                 if (status === window.kakao.maps.services.Status.OK) {
-                const addressName = result[0]?.address?.address_name || "주소를 찾을 수 없음";
-                setAddress(addressName); // 변환된 주소 저장
-                console.log(addressName);
-                
+                const addressName = result[0]?.address?.address_name || "주소를 찾을 수 없음"; // 주소 가져오기
+                const parts = addressName.split(" "); // 띄어쓰기기준으로 split
+                const city = parts[0]; // ex) 서울(시)
+                const province = parts[1]; // ex) 중구(구)
+                setAddress({ city: city, province: province }) // address 변수에 시, 구
+                // console.log(address);
                 }
             }
         );
     }
 
-    useEffect(()=>{
-       
-    })
+    const fetchGetLibList = async() => {
+        try {
+            const res = await fetch(LIBLIST_URL, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (res.status === 200) {
+                const json = await res.json();
+                if (json) {
+                    console.log(json);
+                    setLibList(json);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching upcycle posts:", error);
+        }
+    }
+
+    
 
     const bookNameHandler = (e) => {
         const inputVal = e.target.value;
@@ -77,26 +107,24 @@ function Main() {
 
     
     const schonClick = async() => {
-        // const res = await fetch(SEND_LETTER_URL, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify({
-        //         toUser: `${touser}`,
-        //         // fromUser:`${fromuser}`, // 나 (안됨 애초에 userId가 없음 토큰으로 해야함
-        //         content:`${content}`,
-        //         // date:{date},
-        //         letterTemplateId:'1'
-        //     })
-        // });
-        // if (res.ok) {
-        //     const json = await res.json();
-        //     redirection('/friend');
-        //     console.log(json);
-        // } else {
-        //     console.error('응답 상태 코드:', res.status);
-        //     alert('서버와의 통신이 원활하지 않습니다. 상태 코드: ' + res.status);
+        // try {
+
+        //     const res = await fetch(SEARCH_LETTER_URL + `/${year}`, {
+        //         method: 'GET',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //         },
+        //     });
+
+        //     if (res.status === 200) {
+        //         const json = await res.json();
+        //         if (json) {
+        //             console.log(json);
+        //             setBookList(json);
+        //         }
+        //     }
+        // } catch (error) {
+        //     console.error("Error fetching upcycle posts:", error);
         // }
     }
 
@@ -109,7 +137,7 @@ function Main() {
                     <IoSearchSharp/>
                 </div>
                 <div className="lib-list">
-                    
+                    <p>근처에 도서관이 없습니다!</p>
                 </div>
                 {/*<div className="implied-map">*/}
                     <Map
@@ -138,6 +166,17 @@ function Main() {
                             <input type="text" className="sch-lib-input" name="bookname" onChange={bookNameHandler} placeholder="책이름"/>
                             <IoSearchSharp onClick={schonClick} />
                         </div>
+                        <ul className="yletter-box">
+                            {/* {displayedBookList.map((item, index) => (
+                                <BookList
+                                    key={index}
+                                    content={item.content}
+                                    fromUser={item.fromUser}
+                                    toUser={item.toUser}
+                                    date={item.date}
+                                />
+                            ))} */}
+                        </ul>
                     </div>
                 </div>
             }
