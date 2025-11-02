@@ -1,0 +1,23 @@
+.booklist-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: start;
+    gap: 3px;
+    padding-bottom: 2%;
+    border-bottom: 1px solid #ccc;
+
+    .book-name {
+        font-size: 15px;
+    }
+    
+    .book-authors {
+        font-size: 11px;
+    
+    }
+    
+    .book-pulisher {
+        font-size: 11px;
+    }
+    
+}

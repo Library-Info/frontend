@@ -2,9 +2,10 @@
 import '../scss/Main.scss'
 import React, {useEffect, useState} from "react";
 import Header from '../../header/js/Header.js'
+import BookList from '../..//subpage/js/BookList.js'
 import { IoSearchSharp, IoClose  } from "react-icons/io5";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
-import {LIBLIST_URL} from "../../../config/Host-config.js";
+import {LIBLIST_URL, BOOKSCH_URL, LIBSCH_URL} from "../../../config/Host-config.js";
 
 
 function Main() {
@@ -14,9 +15,10 @@ function Main() {
     const [modalOpen, setModalOpen] = useState(false); // 책 검색 모달
     const [bookName, setBookName] = useState([]); // 책 이름
     const [address, setAddress] = useState({ city: "", province: "" }); // 현재위치주소
+    const [ready, setReady] = useState(false); // 검색할 준비
     const [bookList, setBookList] = useState([]); // 검색한 책 리스트
     const [page, setPage] = useState(1); // 현재페이지
-    const itemsPerPage = 15; // 페이지당 15개
+    const itemsPerPage = 10; // 페이지당 15개
     const displayedBookList = bookList.slice( 
         (page - 1) * itemsPerPage,
         page * itemsPerPage
@@ -53,15 +55,16 @@ function Main() {
 
     useEffect(() => {
         if (location.lat && location.lng) {
-            getAddr(); // 위치가 설정된 이후에만 주소 변환 실행
+            getAddr();
         }
-    }, [location]); // location이 바뀔 때 실행
+    }, [location]);
 
-    useEffect(()=> {
-        fetchGetLibList();
-        console.log('12');
-        
-    },[address]);
+    // 주소(address)가 변경되면 도서관 리스트 요청
+    useEffect(() => {
+        if (address.city && address.province) {
+            fetchGetLibList();
+        }
+    }, [address]);
 
 
     const getAddr = () => {
@@ -73,11 +76,11 @@ function Main() {
             location.lat, // 위도
             (result, status) => {
                 if (status === window.kakao.maps.services.Status.OK) {
-                const addressName = result[0]?.address?.address_name || "주소를 찾을 수 없음"; // 주소 가져오기
-                const parts = addressName.split(" "); // 띄어쓰기기준으로 split
-                const city = `${parts[0]}`; // ex) 서울(시)
-                const province = `${parts[1]}`; // ex) 중구(구)
-                setAddress({ city: city, province: province }) // address 변수에 시, 구
+                    const addressName = result[0]?.address?.address_name || "";
+                    const parts = addressName.split(" ");
+                    const city = parts[0] || "";
+                    const province = parts[1] || "";
+                    setAddress({ city: city, province: province }) // address 변수에 시, 구
                 
                 }
             }
@@ -110,33 +113,58 @@ function Main() {
     const bookNameHandler = (e) => {
         const inputVal = e.target.value;
         setBookName(inputVal);
-        // console.log(bookName);
+        console.log(bookName);
     }
 
      
 
     
     const schonClick = async() => {
-        // try {
+        try {
+            const res = await fetch(BOOKSCH_URL + `?keyword=${bookName}&pageNO=${1}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        //     const res = await fetch(SEARCH_LETTER_URL + `/${year}`, {
-        //         method: 'GET',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //     });
-
-        //     if (res.status === 200) {
-        //         const json = await res.json();
-        //         if (json) {
-        //             console.log(json);
-        //             setBookList(json);
-        //         }
-        //     }
-        // } catch (error) {
-        //     console.error("Error fetching upcycle posts:", error);
-        // }
+            if (res.status === 200) {
+                const json = await res.json();
+                if (json) {
+                    console.log(json);
+                    setBookList(json);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching :", error);
+        }
     }
+
+    const handleBookClick = async (isbn) => {
+        try {
+             // libList 안의 libCode만 추출
+            const libraryCodeList = libList.map(lib => lib.libCode);
+            const res = await fetch(LIBSCH_URL, {
+                method: 'POST', // GET 대신 POST
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    isbn13: isbn,
+                    libraryCodeList: libraryCodeList
+                }), // isbn만 전송
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                console.log('Response:', data);
+
+                setModalOpen(false);
+            }
+        } catch (error) {
+            console.error("Error sending ISBN:", error);
+        }
+    };     
 
     return (
         <div className="wrap">
@@ -147,7 +175,18 @@ function Main() {
                     <IoSearchSharp/>
                 </div>
                 <div className="lib-list">
-                    <p>근처에 도서관이 없습니다!</p>
+                    {libList.length === 0 ? (
+                        <p>근처에 도서관이 없습니다!</p>
+                    ) : (
+                        <ul className='lib-content'>
+                            {libList.map((lib, index) => (
+                                <li key={index} className='lib-box'>
+                                    <p className='lib-name'>{lib.libName}</p>
+                                    <p className='lib-address'>{lib.address}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
                 {/*<div className="implied-map">*/}
                     <Map
@@ -158,7 +197,7 @@ function Main() {
 
                         {libList.map((position, index) => (
                             <MapMarker
-                                key={`${position.x}_${position.y}`}
+                                key={`${position.x}_${position.y}_${index}`}
                                 position={{lat: position.x, lng: position.y}}
                             />
                         ))}
@@ -176,16 +215,17 @@ function Main() {
                             <input type="text" className="sch-lib-input" name="bookname" onChange={bookNameHandler} placeholder="책이름"/>
                             <IoSearchSharp onClick={schonClick} />
                         </div>
-                        <ul className="yletter-box">
-                            {/* {displayedBookList.map((item, index) => (
+                        <ul className="booklist-wrap">
+                            {displayedBookList.map((item, index) => (
                                 <BookList
                                     key={index}
-                                    content={item.content}
-                                    fromUser={item.fromUser}
-                                    toUser={item.toUser}
-                                    date={item.date}
+                                    bookname={item.bookname}
+                                    authors={item.authors}
+                                    publisher={item.publisher}
+                                    isbn={item.isbn13}
+                                    onClick={handleBookClick}
                                 />
-                            ))} */}
+                            ))}
                         </ul>
                     </div>
                 </div>

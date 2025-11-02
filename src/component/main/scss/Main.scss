@@ -28,7 +28,7 @@
   
     .main-container {
       width: 100%;
-      height: 100%;
+      height: 94%;
       display: flex;
       flex-direction: column;
       justify-content: start;
@@ -54,14 +54,43 @@
       
       .lib-list {
         width: 70%;
-        // height: ;
+        max-height: 25%;
         padding: 2%;
         border: 1px solid #666;
         border-radius: 10px 0px;
         box-shadow: 1px 1px 10px #ccc;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: start;
+        overflow-y: scroll;
+
+        .lib-content {
+          flex: 1;   
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          justify-content: center;
+
+        
+          .lib-box {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-bottom: 5px;
+            justify-content: center;
+            border-bottom: 1px solid #ccc;
+
+            .lib-name {
+              font-size: 15px;
+            }
+            .lib-address {
+              font-size: 13px;
+            }
+          }
+        }
       }
       
       .map-api {
@@ -76,7 +105,7 @@
     background-color: #fff;
     width: 100%;
     height: 100%;
-    z-index: 100;
+    z-index: 9999;
     position: absolute;
     display: flex;
     flex-direction: column;
@@ -86,11 +115,11 @@
       .modal-content {
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
+        justify-content: space-between;
         align-items: center;
         width: 100%;
-        height: 90%;
-        padding: 10% 0 0 0;
+        height: 100%;
+        padding: 7% 0 0 0;
 
         .modal-close {
           width: 90%;
@@ -108,7 +137,7 @@
         .search-container {
         width: 80%;
         height: 50px;
-        margin-top: 10%;
+        margin: 7%;
         box-shadow: 1px 1px 10px #ccc;
         border-radius: 25px;
         display: flex;
@@ -116,11 +145,20 @@
         justify-content: space-around;
         align-items: center;
 
-        .sch-lib-input {
-          border: 0;
-          outline: 0;
+          .sch-lib-input {
+            border: 0;
+            outline: 0;
+          }
         }
-      }
+
+        .booklist-wrap {
+          width: 75%;
+          height: 75%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 2.5% 2.5% 12% 2.5%;
+        }
       }
     }
   }

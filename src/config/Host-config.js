@@ -18,11 +18,15 @@ const LOCATION_URL = 'http://localhost:3000';
 // }
 
 const LIBLIST = '/library/list';
+const BOOKSCH = '/search/books';
+const LIBSCH = '/search/isbn/library'
 // const UPCYCLE = '/api/upcycle'
 // const MEET = '/api/meeting'
 //
 //
 export const LIBLIST_URL = API_BASE_URL + LIBLIST;
+export const BOOKSCH_URL = API_BASE_URL + BOOKSCH;
+export const LIBSCH_URL = API_BASE_URL + LIBSCH;
 // export const UPCYCLE_URL = API_BASE_URL + UPCYCLE;
 // export const MEET_URL = API_BASE_URL + MEET;
 // export const KAKAO_URL=`https://kauth.kakao.com/oauth/authorize`;
