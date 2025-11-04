@@ -30,5 +30,5 @@ export const LIBSCH_URL = API_BASE_URL + LIBSCH;
 // export const UPCYCLE_URL = API_BASE_URL + UPCYCLE;
 // export const MEET_URL = API_BASE_URL + MEET;
 // export const KAKAO_URL=`https://kauth.kakao.com/oauth/authorize`;
-export const REST_API_KEY=`75f4e97c95a20a05b08c102f76677c36`;
+export const REST_API_KEY=`206167c2444417c4b693c92fe1e1f633`;
 // export  const REDIRECT_URI=`http://localhost:3000/sign_in`;

@@ -4,7 +4,7 @@ import { RxHamburgerMenu } from "react-icons/rx";
 function Header() {
     return (
         <div className="header-container">
-            <RxHamburgerMenu class="burger-icon" />
+            <RxHamburgerMenu className="burger-icon" />
         </div>
     );
 }

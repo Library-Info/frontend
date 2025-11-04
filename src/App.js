@@ -8,13 +8,6 @@ import { REST_API_KEY } from "./config/Host-config.js";
 
 
 function App() {
-    // useEffect(() => {
-    //     // 카카오 초기화
-    //     if (!window.Kakao.isInitialized()) {
-    //         window.Kakao.init(`${REST_API_KEY}`); // REST API 키 입력
-    //         console.log('Kakao SDK initialized');
-    //     }
-    // }, []);
     return (
       <BrowserRouter>
         <Reset/>
