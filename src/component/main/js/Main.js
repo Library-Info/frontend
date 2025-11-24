@@ -28,6 +28,7 @@ function Main() {
         page * itemsPerPage
     );
     const [mergedList, setMergedList] = useState([]);
+    const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
         if (window.kakao && window.kakao.maps) {
@@ -103,6 +104,7 @@ function Main() {
                     const province = parts[1] || "";
                     setAddress({ city: city, province: province }) // address 변수에 시, 구
                     // console.log(addressName);
+                    // console.log(location);
                 
                 }
             }
@@ -136,24 +138,25 @@ function Main() {
     const bookNameHandler = (e) => {
         const inputVal = e.target.value;
         setBookName(inputVal);
-        // console.log(bookName);
+        console.log(bookName);
     }
 
      
     // 책 검색
     const schonClick = async() => {
         try {
+            setHasSearched(true);
             const res = await fetch(BOOKSCH_URL + `?keyword=${bookName}&pageNO=${1}`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                // headers: {
+                //     'Content-Type': 'application/json',
+                // },
             });
 
             if (res.status === 200) {
                 const json = await res.json();
                 if (json) {
-                    // console.log(json);
+                    console.log(json);
                     setBookList(json);
                 }
             }
@@ -209,71 +212,111 @@ function Main() {
 
     },[libBookList])
 
+    const handleMarkerClick = (index) => {
+        if (isOpen === null) {
+            setIsOpen(index)
+        } else if (isOpen === index) {
+            // e.stopPropagation();
+            setIsOpen(null)
+        }
+    }
+
+    const handleMarkerLink = (position) => {
+        window.open(`https://map.kakao.com/link/by/traffic/내위치,${location.lat},${location.lng}/${position.libName},${position.latitude},${position.longitude}`)
+    }
+
     return (
         <div className="wrap">
             <Header/>
             <div className="main-container">
                 <div className="search-container">
                     <input type="text" className="sch-lib-input" placeholder='책이름' value=""
-                           onClick={() => setModalOpen(true)}/>
+                           onClick={() => {
+                               setModalOpen(true);
+                               setHasSearched(false);
+                           }}/>
                     <IoSearchSharp/>
                 </div>
-                <div className="lib-list">
-                    {libBookList.length === 0 ? (
-                        libList.length === 0 ? (
-                            <p>근처에 도서관이 없습니다!</p>
-                        ) : (
-                            <ul className='lib-content'>
-                                {libList.map((lib, index) => (
-                                    <li key={index} className='lib-box'>
-                                        <p className='lib-name'>{lib.libName}</p>
-                                        <p className='lib-address'>{lib.address}</p>
-                                    </li>
-                                ))}
-                            </ul>
-                        )
-                    ) : (
+                <div className='lib-list'>
+                    {/* 1️⃣ 도서관도 없고 책도 없을 때 */}
+                    {libList.length === 0 ? (
+                        <p>근처에 도서관이 없습니다!</p>
+                    ) : mergedList.length === 0 ? (
+                        <ul className='lib-content'>
+                            {libList.map((lib, index) => (
+                                <li key={index} className='lib-box'>
+                                    <p className='lib-name'>{lib.libName}</p>
+                                    <p className='lib-address'>{lib.address}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : null}
+
+                    {/* 2️⃣ 도서관은 있지만 책이 없을 때 */}
+                    {hasSearched && libList.length >= 1 && libBookList.length === 0 && (
+                            <p>근처 도서관에 해당 책이 없습니다.</p>
+                    )}
+
+                    {/* 3️⃣ 책이 있는 도서관 목록 표시 */}
+                    {libBookList.length > 0 && libList.length > 0 && (
                         <ul className='lib-content'>
                             {mergedList.map((lib, index) => (
                                 <li key={index} className='lib-box'>
                                     <p className='lib-name'>{lib.libName}</p>
                                     <p className='lib-address'>{lib.address}</p>
-                                    <p className='loans-status'>대출가능여부 : {lib.loanAvailable === 'Y' ? '가능' : '불가능'}</p>
+                                    <p className='loans-status'>
+                                        대출가능여부 : {lib.loanAvailable === 'Y' ? '가능' : '불가능'}
+                                    </p>
                                 </li>
                             ))}
                         </ul>
                     )}
                 </div>
 
+
                 {/*<div className="implied-map">*/}
-                <Map
-                    id="map"
-                    className="map-api"
-                    center={{lat: location.lat, lng: location.lng}}
-                    level={5}>
+                    <Map
+                        id="map"
+                        className="map-api"
+                        center={{lat: location.lat, lng: location.lng}}
+                        level={5}
+                        onClick={() => setIsOpen(null)}>
+                        {libBookList.length === 0 ? (
+                            libList.map((position, index) => (
+                                <MapMarker
+                                    key={`${position.latitude}_${position.longitude}_${index}`}
+                                    position={{lat: position.latitude, lng: position.longitude}}
+                                    onClick={() => handleMarkerClick(index)}>
 
-                    {libList.map((position, index) => (
-                        <MapMarker
-                            key={`${position.latitude}_${position.longitude}_${index}`}
-                            position={{lat: position.latitude, lng: position.longitude}}
-                            onClick={(e) => {
-                                if (isOpen === null) {
-                                    setIsOpen(index)
-                                } else if (isOpen === index) {
-                                    // e.stopPropagation();
-                                    setIsOpen(null)
-                                }
-                            }}>
+                                    {isOpen === index && (
+                                        <div className="marker-wrap">
+                                            <div className="marker-name">{position.libName}</div>
+                                            <button className="marker-map-link"
+                                                    onClick={() => handleMarkerLink(position)}>길찾기</button>
+                                        </div>
+                                    )}
+                                </MapMarker>
+                            ))
+                        ) : (
+                            mergedList.map((position, index) => (
+                                <MapMarker
+                                    key={`${position.latitude}_${position.longitude}_${index}`}
+                                    position={{lat: position.latitude, lng: position.longitude}}
+                                    onClick={() => handleMarkerClick(index)}>
 
-                            {isOpen === index && (
-                                <div style={{ minWidth: "150px" }}>
-
-                                    <div style={{ padding: "5px", color: "#000" }}>{position.libName}</div>
-                                </div>
-                            )}
-                    </MapMarker>
-                    ))}
-                </Map>
+                                    {isOpen === index && (
+                                        <div className="marker-wrap">
+                                            <div className="marker-name">{position.libName}</div>
+                                            <button className="marker-map-link"
+                                                    onClick={() => handleMarkerLink(position)}>길찾기</button>
+                                        </div>
+                                    )}
+                                </MapMarker>
+                            ))
+                        )
+                        }
+                    </Map>
+                    
                 {/*</div>*/}
             </div>
             {

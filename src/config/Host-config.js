@@ -18,6 +18,7 @@ const LOCATION_URL = 'http://localhost:3000';
 // }
 
 const LIBLIST = '/library/list';
+const LIBRECOMMEND = '/library/recommend';
 const BOOKSCH = '/search/books';
 const LIBSCH = '/search/isbn/library'
 // const UPCYCLE = '/api/upcycle'
@@ -30,5 +31,5 @@ export const LIBSCH_URL = API_BASE_URL + LIBSCH;
 // export const UPCYCLE_URL = API_BASE_URL + UPCYCLE;
 // export const MEET_URL = API_BASE_URL + MEET;
 // export const KAKAO_URL=`https://kauth.kakao.com/oauth/authorize`;
-export const REST_API_KEY=`206167c2444417c4b693c92fe1e1f633`;
+export const REST_API_KEY=`b9b2847831840e2d6c10d44d10de81a5`;
 // export  const REDIRECT_URI=`http://localhost:3000/sign_in`;
