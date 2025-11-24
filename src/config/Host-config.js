@@ -26,6 +26,7 @@ const LIBSCH = '/search/isbn/library'
 //
 //
 export const LIBLIST_URL = API_BASE_URL + LIBLIST;
+export const LIBRECOMMEND_URL = API_BASE_URL + LIBRECOMMEND;
 export const BOOKSCH_URL = API_BASE_URL + BOOKSCH;
 export const LIBSCH_URL = API_BASE_URL + LIBSCH;
 // export const UPCYCLE_URL = API_BASE_URL + UPCYCLE;
