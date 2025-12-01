@@ -13,6 +13,8 @@ function BookRecommend() {
     const [rcTitle, setRcTitle] = useState({age: "20대", gender: "여성"});
     const minorLabels = ["영유아", "유아", "초등생", "청소년"]; // 미성년자
     const savedLocation = JSON.parse(localStorage.getItem("userLocation"));
+    const [loading, setLoading] = useState(false);
+
 
     // BookRecommend.js 파일 내에 작성
     const ageOptions = [
@@ -35,12 +37,14 @@ function BookRecommend() {
 
     useEffect(() => {
         fetchGetRecommend();
-        console.log(savedLocation.city);
+        // console.log(savedLocation.city);
     }, [savedLocation.city]);
 
     // 추천 책 검새
     const fetchGetRecommend = async () => {
         try {
+            setLoading(true);  // 🔥 로딩 시작
+
             const res = await fetch(LIBRECOMMEND_URL + `?age=${age}&gender=${gender}&region=${savedLocation.city}`, {
                 method: 'GET',
                 headers: {
@@ -51,15 +55,17 @@ function BookRecommend() {
             if (res.status === 200) {
                 const json = await res.json();
                 if (json) {
-                    console.log(json);
                     setRecommendBook(json);
                     changeTitle();
                 }
             }
         } catch (error) {
-            console.error("Error fetching upcycle posts:", error);
+            console.error("Error fetching recommend:", error);
+        } finally {
+            setLoading(false); // 🔥 무조건 로딩 종료
         }
     }
+
 
     // 나이 변경 핸들러
     const handleChangeAge = (event) => {
@@ -91,7 +97,7 @@ function BookRecommend() {
         // 미성년자일 경우 성별 텍스트 변환
         const finalGender = isMinor
             ? (gender === "여성" ? "여자" : "남자")
-            : rcTitle.gender; // 여성/남성 그대로 사용
+            : gender; // 여성/남성 그대로 사용
 
         // 최종 타이틀 업데이트
         setRcTitle({
@@ -145,18 +151,22 @@ function BookRecommend() {
                     </div>
                 </div>
                 <ul className='recommend-content'>
-                    {recommendBook.map((book, index) => (
-                        <li key={index} className='book-box'>
-                            <div className="recommend-img-box">
-                                <img className="recommend-img" src={book.bookImageURL} alt={book.isbn13}/>
-                            </div>
-                            <div className="recommend-books">
-                                <p className="recommend-bookname">{book.bookname}</p>
-                                <p className="recommend-bookauthors">{book.authors}</p>
-                                <p className="recommend-bookpublisher">{book.publisher}</p>
-                            </div>
-                        </li>
-                    ))}
+                    {loading ? (
+                        <p className="loading-text">📚 추천 도서 불러오는 중...</p>
+                    ) : (
+                        recommendBook.map((book, index) => (
+                            <li key={index} className='book-box'>
+                                <div className="recommend-img-box">
+                                    <img className="recommend-img" src={book.bookImageURL} alt={book.isbn13}/>
+                                </div>
+                                <div className="recommend-books">
+                                    <p className="recommend-bookname">{book.bookname}</p>
+                                    <p className="recommend-bookauthors">{book.authors}</p>
+                                    <p className="recommend-bookpublisher">{book.publisher}</p>
+                                </div>
+                            </li>
+                        ))
+                    )}
                 </ul>
             </div>
         </div>
