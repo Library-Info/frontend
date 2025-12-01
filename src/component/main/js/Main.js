@@ -1,35 +1,65 @@
 /* global kakao */
 import '../scss/Main.scss'
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useMemo} from "react";
 import Header from '../../header/js/Header.js'
 import BookList from '../../subpage/js/BookList.js'
 import { IoSearchSharp, IoClose  } from "react-icons/io5";
-import { Map, MapMarker } from "react-kakao-maps-sdk";
-import {LIBLIST_URL, BOOKSCH_URL, LIBSCH_URL} from "../../../config/Host-config.js";
+import { Map, MapMarker, useMap } from "react-kakao-maps-sdk";
+import {LIBLIST_URL, BOOKSCH_URL, LIBSCH_URL, LIBMAP_URL} from "../../../config/Host-config.js";
+import { useNavigate } from "react-router-dom";
+
+// 지도 범위 재설정
+function ResetMapBounds({ points }) {
+    const map = useMap();
+
+    // 맵과 포인트(위도, 경도)가 바뀔때마다
+    useEffect(() => {
+        // 맵이 없거나 위도,경도가 없으면 리턴
+        if (!map || points.length === 0) return;
+
+        // 맵의 위도경도 바운드들을 가져옴
+        const bounds = new kakao.maps.LatLngBounds();
+
+        // 포인트의 위도경도를 해체
+        points.forEach((p) => {
+            bounds.extend(new kakao.maps.LatLng(p.lat, p.lng));
+        });
+        // 맵의 바운드를 다시넣어서 세팅함
+        map.setBounds(bounds);
+
+    }, [map, points]);
+
+    return null;
+}
 
 
 function Main() {
-    const [isKakaoLoaded, setIsKakaoLoaded] = useState(false);
+    const [isKakaoLoaded, setIsKakaoLoaded] = useState(false); // 카카오 로드
     const [libList, setLibList] = useState([]); // 도서관 리스트
-    const [location, setLocation] = useState({ lat: 37.5665, lng: 126.9780}); // 기본값 서울
+    const [location, setLocation] = useState({lat: 37.5665, lng: 126.9780}); // 기본값 서울
     const [error, setError] = useState(); // 에러변수
     const [modalOpen, setModalOpen] = useState(false); // 책 검색 모달
     const [isOpen, setIsOpen] = useState(null); // 지도 마커 모달
     const [bookName, setBookName] = useState([]); // 책 이름
-    const [address, setAddress] = useState({ city: "", province: "" }); // 현재위치주소
+    const [address, setAddress] = useState({city: "", province: ""}); // 현재위치주소
     const [ready, setReady] = useState(false); // 검색할 준비
     const [bookList, setBookList] = useState([]); // 검색한 책 리스트
     const [libBookList, setLibBookList] = useState([]); // 특정 ISBN으로 조회한 결과
     // const [matchedLibraries, setMatchedLibraries] = useState([]); // 특정 ISBN으로 조회한 결과
     const [page, setPage] = useState(1); // 현재페이지
+    const [searchPage, setSearchPage] = useState(1); // 검색페이지
     const itemsPerPage = 10; // 페이지당 15개
-    const displayedBookList = bookList.slice( 
+    // 페이지네이션을 적용할 책리스트
+    const displayedBookList = bookList.slice(
         (page - 1) * itemsPerPage,
         page * itemsPerPage
     );
-    const [mergedList, setMergedList] = useState([]);
-    const [hasSearched, setHasSearched] = useState(false);
+    const [mergedList, setMergedList] = useState([]); // 도서관 머지
+    const [hasSearched, setHasSearched] = useState(false); // 책검색 모달 on/off
+    const [points, setPoints] = useState({lat: '', lng: ''}); // 셋바운드 할 위도,경도 리스트
 
+
+    // 카카오 맵 로딩
     useEffect(() => {
         if (window.kakao && window.kakao.maps) {
             window.kakao.maps.load(() => {
@@ -70,7 +100,8 @@ function Main() {
                         maximumAge: 0,
                     }
                 );
-            };
+            }
+            ;
         }
     }, [isKakaoLoaded]);
 
@@ -81,12 +112,28 @@ function Main() {
         }
     }, [isKakaoLoaded, location]);
 
+
     // 주소(address)가 변경되면 도서관 리스트 요청
     useEffect(() => {
         if (address.city && address.province) {
             fetchGetLibList();
+            const saved = JSON.parse(localStorage.getItem("userLocation"));
+
+            // 기존 저장값과 비교해서 다르면 저장
+            if (
+                !saved ||
+                saved.city !== address.city
+            ) {
+                localStorage.setItem(
+                    "userLocation",
+                    JSON.stringify({
+                        city: address.city
+                    })
+                );
+            }
         }
     }, [address]);
+
 
     // 경도와 위도로 주소변환
     const getAddr = (lat, lng) => {
@@ -102,19 +149,19 @@ function Main() {
                     const parts = addressName.split(" ");
                     const city = parts[0] || "";
                     const province = parts[1] || "";
-                    setAddress({ city: city, province: province }) // address 변수에 시, 구
+                    setAddress({city: city, province: province}) // address 변수에 시, 구
                     // console.log(addressName);
                     // console.log(location);
-                
+
                 }
             }
         );
     }
 
     // 도서관 검색
-    const fetchGetLibList = async() => {
+    const fetchGetLibList = async () => {
         try {
-            const res = await fetch(LIBLIST_URL + `?lantitude=${location.lat}&longitude=${location.lng}&city=${address.city}&province=${address.province}`, {
+            const res = await fetch(LIBMAP_URL + `?mylat=${location.lat}&mylong=${location.lng}&city=${address.city}&province=${address.province}&radius=5000`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -126,6 +173,7 @@ function Main() {
                 if (json) {
                     console.log(json);
                     setLibList(json);
+                    setPoints({lat: `${json.lantitude}`, lng: `${json.longitude}`})
                 }
             }
         } catch (error) {
@@ -133,24 +181,31 @@ function Main() {
         }
     }
 
-    
+
+
+
+
     // 책이름을 적을때마다 새로 변수에 넣음
     const bookNameHandler = (e) => {
         const inputVal = e.target.value;
         setBookName(inputVal);
-        console.log(bookName);
+        // console.log(bookName);
     }
 
+    const schonClick = () => {
+        setSearchPage(1);     // 검색할 때 항상 page=1
+        fetchSearchBooks(1);
+    };
      
     // 책 검색
-    const schonClick = async() => {
+    const fetchSearchBooks = async(page) => {
         try {
             setHasSearched(true);
-            const res = await fetch(BOOKSCH_URL + `?keyword=${bookName}&pageNO=${1}`, {
+            const res = await fetch(BOOKSCH_URL + `?keyword=${bookName}&pageNO=${page}`, {
                 method: 'GET',
-                // headers: {
-                //     'Content-Type': 'application/json',
-                // },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (res.status === 200) {
@@ -225,12 +280,14 @@ function Main() {
         window.open(`https://map.kakao.com/link/by/traffic/내위치,${location.lat},${location.lng}/${position.libName},${position.latitude},${position.longitude}`)
     }
 
+
+
     return (
         <div className="wrap">
             <Header/>
             <div className="main-container">
                 <div className="search-container">
-                    <input type="text" className="sch-lib-input" placeholder='책이름' value=""
+                    <input type="text" className="sch-lib-input" placeholder='책이름' 
                            onClick={() => {
                                setModalOpen(true);
                                setHasSearched(false);
@@ -261,7 +318,7 @@ function Main() {
                     {libBookList.length > 0 && libList.length > 0 && (
                         <ul className='lib-content'>
                             {mergedList.map((lib, index) => (
-                                <li key={index} className='lib-box'>
+                                <li key={index} className='lib-box' onClick={() => handleMarkerLink(lib)}>
                                     <p className='lib-name'>{lib.libName}</p>
                                     <p className='lib-address'>{lib.address}</p>
                                     <p className='loans-status'>
@@ -273,58 +330,71 @@ function Main() {
                     )}
                 </div>
 
+                /* 지도 */
+                <Map
+                    id="map"
+                    className="map-api"
+                    center={{lat: location.lat, lng: location.lng}}
+                    level={5}
+                    onClick={() => setIsOpen(null)}>
 
-                {/*<div className="implied-map">*/}
-                    <Map
-                        id="map"
-                        className="map-api"
-                        center={{lat: location.lat, lng: location.lng}}
-                        level={5}
-                        onClick={() => setIsOpen(null)}>
-                        {libBookList.length === 0 ? (
-                            libList.map((position, index) => (
-                                <MapMarker
-                                    key={`${position.latitude}_${position.longitude}_${index}`}
-                                    position={{lat: position.latitude, lng: position.longitude}}
-                                    onClick={() => handleMarkerClick(index)}>
+                    /* 지도 마커를 찍는 코드 */
+                    {libBookList.length === 0 ? (
+                        libList.map((position, index) => (
+                            <MapMarker
+                                key={`${position.latitude}_${position.longitude}_${index}`}
+                                position={{lat: position.latitude, lng: position.longitude}}
+                                onClick={() => handleMarkerClick(index)}>
 
-                                    {isOpen === index && (
-                                        <div className="marker-wrap">
-                                            <div className="marker-name">{position.libName}</div>
-                                            <button className="marker-map-link"
-                                                    onClick={() => handleMarkerLink(position)}>길찾기</button>
-                                        </div>
-                                    )}
-                                </MapMarker>
-                            ))
-                        ) : (
-                            mergedList.map((position, index) => (
-                                <MapMarker
-                                    key={`${position.latitude}_${position.longitude}_${index}`}
-                                    position={{lat: position.latitude, lng: position.longitude}}
-                                    onClick={() => handleMarkerClick(index)}>
+                                {isOpen === index && (
+                                    <div className="marker-wrap">
+                                        <div className="marker-name">{position.libName}</div>
+                                        <button className="marker-map-link"
+                                                onClick={() => handleMarkerLink(position)}>길찾기</button>
+                                    </div>
+                                )}
+                            </MapMarker>
+                        ))
+                    ) : (
+                        mergedList.map((position, index) => (
+                            <MapMarker
+                                key={`${position.latitude}_${position.longitude}_${index}`}
+                                position={{lat: position.latitude, lng: position.longitude}}
+                                onClick={() => handleMarkerClick(index)}>
 
-                                    {isOpen === index && (
-                                        <div className="marker-wrap">
-                                            <div className="marker-name">{position.libName}</div>
-                                            <button className="marker-map-link"
-                                                    onClick={() => handleMarkerLink(position)}>길찾기</button>
-                                        </div>
-                                    )}
-                                </MapMarker>
-                            ))
-                        )
-                        }
-                    </Map>
-                    
-                {/*</div>*/}
+                                {isOpen === index && (
+                                    <div className="marker-wrap">
+                                        <div className="marker-name">{position.libName}</div>
+                                        <button className="marker-map-link"
+                                                onClick={() => handleMarkerLink(position)}>길찾기</button>
+                                    </div>
+                                )}
+                            </MapMarker>
+                        ))
+                    )
+                    }
+
+                    /* 지도 벙위 재설정 */
+                    <ResetMapBounds
+                        /* 도서관책리스트 길이가 0 이면 도서관리스트를 쓰고 아니면 합친도서관리스트의 위도 경도를 가지고 온다. */
+                        points={(libBookList.length === 0 ? libList : mergedList).map(pos => ({
+                            lat: pos.latitude,
+                            lng: pos.longitude
+                        }))}
+                    />
+                </Map>
+
             </div>
             {
                 modalOpen &&
                 <div className="modal-container">
                     <div className="modal-content">
                         <div className="modal-close">
-                            <IoClose className="modal-close-btn" onClick={() => setModalOpen(false)}/>
+                            <IoClose className="modal-close-btn" onClick={() => {
+                                setModalOpen(false);
+                                setHasSearched(false);      // 검색상태 초기화
+                                setLibBookList([]);
+                            }}/>
                         </div>
                         <div className="search-container">
                             <input type="text" className="sch-lib-input" name="bookname" onChange={bookNameHandler}
@@ -343,6 +413,52 @@ function Main() {
                                 />
                             ))}
                         </ul>
+                        <div className="pagination-wrap">
+                            {(() => {
+                                if (bookList.length === 0) return null;
+
+                                // 책은 10개씩 고정이니까 단순히 충분한 페이지수 노출하면 됨
+                                // 보통 API에서 totalCount를 주는데 지금 없으니까
+                                // 일단 1~5페이지 정도 고정으로 만들 수 있음
+                                const totalPages = 5; // 또는 서버가 totalCount 주면 계산하면 됨
+
+                                return (
+                                    <div className="pagination">
+                                        <button
+                                            disabled={searchPage === 1}
+                                            onClick={() => {
+                                                const newPage = searchPage - 1;
+                                                setSearchPage(newPage);
+                                                fetchSearchBooks(newPage);
+                                            }}>
+                                            ◀
+                                        </button>
+
+                                        {Array.from({length: totalPages}, (_, i) => (
+                                            <button
+                                                key={i + 1}
+                                                className={searchPage === i + 1 ? "active" : ""}
+                                                onClick={() => {
+                                                    setSearchPage(i + 1);
+                                                    fetchSearchBooks(i + 1);
+                                                }}>
+                                                {i + 1}
+                                            </button>
+                                        ))}
+
+                                        <button
+                                            disabled={searchPage === totalPages}
+                                            onClick={() => {
+                                                const newPage = searchPage + 1;
+                                                setSearchPage(newPage);
+                                                fetchSearchBooks(newPage);
+                                            }}>
+                                            ▶
+                                        </button>
+                                    </div>
+                                );
+                            })()}
+                        </div>
                     </div>
                 </div>
             }
