@@ -57,6 +57,7 @@ function Main() {
     const [mergedList, setMergedList] = useState([]); // 도서관 머지
     const [hasSearched, setHasSearched] = useState(false); // 책검색 모달 on/off
     const [points, setPoints] = useState({lat: '', lng: ''}); // 셋바운드 할 위도,경도 리스트
+    const [loading, setLoading] = useState(false); // 로딩
 
 
     // 카카오 맵 로딩
@@ -223,6 +224,7 @@ function Main() {
     // 검색한 책을 클릭했을때
     const handleBookClick = async (isbn) => {
         try {
+            setLoading(true);  // 🔥 로딩 시작
              // libList 안의 libCode만 추출
             const libraryCodeList = libList.map(lib => lib.libCode);
             const res = await fetch(LIBSCH_URL, {
@@ -244,7 +246,9 @@ function Main() {
             }
         } catch (error) {
             console.error("Error sending ISBN:", error);
-        }
+        } finally {
+        setLoading(false); // 🔥 무조건 로딩 종료
+    }
     };
 
     useEffect(() => {
@@ -294,43 +298,49 @@ function Main() {
                            }}/>
                     <IoSearchSharp/>
                 </div>
-                <div className='lib-list'>
-                    {/* 1️⃣ 도서관도 없고 책도 없을 때 */}
-                    {libList.length === 0 ? (
-                        <p>근처에 도서관이 없습니다!</p>
-                    ) : mergedList.length === 0 ? (
-                        <ul className='lib-content'>
-                            {libList.map((lib, index) => (
-                                <li key={index} className='lib-box'>
-                                    <p className='lib-name'>{lib.libName}</p>
-                                    <p className='lib-address'>{lib.address}</p>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : null}
-
-                    {/* 2️⃣ 도서관은 있지만 책이 없을 때 */}
-                    {hasSearched && libList.length >= 1 && libBookList.length === 0 && (
-                            <p>근처 도서관에 해당 책이 없습니다.</p>
-                    )}
-
-                    {/* 3️⃣ 책이 있는 도서관 목록 표시 */}
-                    {libBookList.length > 0 && libList.length > 0 && (
-                        <ul className='lib-content'>
-                            {mergedList.map((lib, index) => (
-                                <li key={index} className='lib-box' onClick={() => handleMarkerLink(lib)}>
-                                    <p className='lib-name'>{lib.libName}</p>
-                                    <p className='lib-address'>{lib.address}</p>
-                                    <p className='loans-status'>
-                                        대출가능여부 : {lib.loanAvailable === 'Y' ? '가능' : '불가능'}
-                                    </p>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                <div className="lib-container">
+                    <div className='lib-list'>
+                        {/* 1️⃣ 도서관도 없고 책도 없을 때 */}
+                        {libList.length === 0 ? (
+                            <p className="lib-text">근처에 도서관이 없습니다!</p>
+                        ) : mergedList.length === 0 ? (
+                            <ul className='lib-content'>
+                                {libList.map((lib, index) => (
+                                    <li key={index} className='lib-box'>
+                                        <p className='lib-name'>{lib.libName}</p>
+                                        <p className='lib-address'>{lib.address}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
+    
+                        {/* 2️⃣ 도서관은 있지만 책이 없을 때 */}
+                        {hasSearched && libList.length >= 1 && libBookList.length === 0 && (
+                                <p className="lib-text">근처 도서관에 해당 책이 없습니다.</p>
+                        )}
+    
+                        {/* 3️⃣ 책이 있는 도서관 목록 표시 */}
+                        {libBookList.length > 0 && libList.length > 0 && (
+                            <ul className='lib-content'>
+                                {mergedList.map((lib, index) => (
+                                    <li key={index} className='lib-box' onClick={() => handleMarkerLink(lib)}>
+                                        <p className='lib-name'>{lib.libName}</p>
+                                        <p className='lib-address'>{lib.address}</p>
+                                        <p className='loans-status'>
+                                            대출가능여부 : {lib.loanAvailable === 'Y' ? '가능' : '불가능'}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    <div className="lib-resch-container">
+                        <button className="lib-resch-btn" onClick={fetchGetLibList}>근처 도서관 검색</button>
+                    </div>
                 </div>
 
-                /* 지도 */
+
+                {/* 지도 */}
                 <Map
                     id="map"
                     className="map-api"
@@ -338,7 +348,7 @@ function Main() {
                     level={5}
                     onClick={() => setIsOpen(null)}>
 
-                    /* 지도 마커를 찍는 코드 */
+                    { /* 지도 마커를 찍는 코드 */}
                     {libBookList.length === 0 ? (
                         libList.map((position, index) => (
                             <MapMarker
@@ -374,7 +384,7 @@ function Main() {
                     )
                     }
 
-                    /* 지도 벙위 재설정 */
+                    {/* 지도 벙위 재설정 */}
                     <ResetMapBounds
                         /* 도서관책리스트 길이가 0 이면 도서관리스트를 쓰고 아니면 합친도서관리스트의 위도 경도를 가지고 온다. */
                         points={(libBookList.length === 0 ? libList : mergedList).map(pos => ({
@@ -402,16 +412,20 @@ function Main() {
                             <IoSearchSharp onClick={schonClick}/>
                         </div>
                         <ul className="booklist-wrap">
-                            {displayedBookList.map((item, index) => (
-                                <BookList
-                                    key={index}
-                                    bookname={item.bookname}
-                                    authors={item.authors}
-                                    publisher={item.publisher}
-                                    isbn={item.isbn13}
-                                    onClick={handleBookClick}
-                                />
-                            ))}
+                            {loading ? (
+                                <p className="loading-text">📖선택한 책의 도서관 검색중...</p>
+                            ) : (
+                                displayedBookList.map((item, index) => (
+                                    <BookList
+                                        key={index}
+                                        bookname={item.bookname}
+                                        authors={item.authors}
+                                        publisher={item.publisher}
+                                        isbn={item.isbn13}
+                                        onClick={handleBookClick}
+                                    />
+                                ))
+                            )}
                         </ul>
                         <div className="pagination-wrap">
                             {(() => {
