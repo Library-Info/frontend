@@ -3,7 +3,7 @@ import '../scss/Main.scss'
 import React, {useEffect, useState, useMemo} from "react";
 import Header from '../../header/js/Header.js'
 import BookList from '../../subpage/js/BookList.js'
-import { IoSearchSharp, IoClose  } from "react-icons/io5";
+import { IoSearchSharp, IoClose, IoChevronBackOutline, IoChevronForward   } from "react-icons/io5";
 import { Map, MapMarker, useMap } from "react-kakao-maps-sdk";
 import {LIBLIST_URL, BOOKSCH_URL, LIBSCH_URL, LIBMAP_URL} from "../../../config/Host-config.js";
 import { useNavigate } from "react-router-dom";
@@ -294,6 +294,7 @@ function Main() {
                     <input type="text" className="sch-lib-input" placeholder='책이름' 
                            onClick={() => {
                                setModalOpen(true);
+                               setBookList([]);
                                setHasSearched(false);
                            }}/>
                     <IoSearchSharp/>
@@ -368,6 +369,7 @@ function Main() {
                     ) : (
                         mergedList.map((position, index) => (
                             <MapMarker
+                                style="border: none;"
                                 key={`${position.latitude}_${position.longitude}_${index}`}
                                 position={{lat: position.latitude, lng: position.longitude}}
                                 onClick={() => handleMarkerClick(index)}>
@@ -411,67 +413,71 @@ function Main() {
                                    placeholder="책이름"/>
                             <IoSearchSharp onClick={schonClick}/>
                         </div>
-                        <ul className="booklist-wrap">
-                            {loading ? (
-                                <p className="loading-text">📖선택한 책의 도서관 검색중...</p>
-                            ) : (
-                                displayedBookList.map((item, index) => (
-                                    <BookList
-                                        key={index}
-                                        bookname={item.bookname}
-                                        authors={item.authors}
-                                        publisher={item.publisher}
-                                        isbn={item.isbn13}
-                                        onClick={handleBookClick}
-                                    />
-                                ))
-                            )}
-                        </ul>
-                        <div className="pagination-wrap">
-                            {(() => {
-                                if (bookList.length === 0) return null;
+                        <div className="booklist-wrap">
+                            <ul className="booklist-container">
+                                {loading ? (
+                                    <p className="loading-text">📖선택한 책의 도서관 검색중...</p>
+                                ) : (
+                                    displayedBookList.map((item, index) => (
+                                        <BookList
+                                            key={index}
+                                            bookname={item.bookname}
+                                            authors={item.authors}
+                                            publisher={item.publisher}
+                                            isbn={item.isbn13}
+                                            onClick={handleBookClick}
+                                        />
+                                    ))
+                                )}
+                            </ul>
+                            <div className="pagination-wrap">
+                                {(() => {
+                                    if (bookList.length === 0) return null;
 
-                                // 책은 10개씩 고정이니까 단순히 충분한 페이지수 노출하면 됨
-                                // 보통 API에서 totalCount를 주는데 지금 없으니까
-                                // 일단 1~5페이지 정도 고정으로 만들 수 있음
-                                const totalPages = 5; // 또는 서버가 totalCount 주면 계산하면 됨
+                                    // 책은 10개씩 고정이니까 단순히 충분한 페이지수 노출하면 됨
+                                    // 보통 API에서 totalCount를 주는데 지금 없으니까
+                                    // 일단 1~5페이지 정도 고정으로 만들 수 있음
+                                    const totalPages = 5; // 또는 서버가 totalCount 주면 계산하면 됨
 
-                                return (
-                                    <div className="pagination">
-                                        <button
-                                            disabled={searchPage === 1}
-                                            onClick={() => {
-                                                const newPage = searchPage - 1;
-                                                setSearchPage(newPage);
-                                                fetchSearchBooks(newPage);
-                                            }}>
-                                            ◀
-                                        </button>
-
-                                        {Array.from({length: totalPages}, (_, i) => (
+                                    return (
+                                        <div className="pagination">
                                             <button
-                                                key={i + 1}
-                                                className={searchPage === i + 1 ? "active" : ""}
+                                                className="bookpage-btn"
+                                                disabled={searchPage === 1}
                                                 onClick={() => {
-                                                    setSearchPage(i + 1);
-                                                    fetchSearchBooks(i + 1);
+                                                    const newPage = searchPage - 1;
+                                                    setSearchPage(newPage);
+                                                    fetchSearchBooks(newPage);
                                                 }}>
-                                                {i + 1}
+                                                <IoChevronBackOutline />
                                             </button>
-                                        ))}
 
-                                        <button
-                                            disabled={searchPage === totalPages}
-                                            onClick={() => {
-                                                const newPage = searchPage + 1;
-                                                setSearchPage(newPage);
-                                                fetchSearchBooks(newPage);
-                                            }}>
-                                            ▶
-                                        </button>
-                                    </div>
-                                );
-                            })()}
+                                            {Array.from({length: totalPages}, (_, i) => (
+                                                <button
+                                                    key={i + 1}
+                                                    className={searchPage === i + 1 ? "active bookpage-btn" : " bookpage-btn"}
+                                                    onClick={() => {
+                                                        setSearchPage(i + 1);
+                                                        fetchSearchBooks(i + 1);
+                                                    }}>
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+
+                                            <button
+                                                className="bookpage-btn"
+                                                disabled={searchPage === totalPages}
+                                                onClick={() => {
+                                                    const newPage = searchPage + 1;
+                                                    setSearchPage(newPage);
+                                                    fetchSearchBooks(newPage);
+                                                }}>
+                                                <IoChevronForward />
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
